@@ -25,3 +25,15 @@ export type Analysis = {
   isCompliant: boolean
   sampleId: number
 }
+
+export type AuditLog = {
+  id: number
+  action: string
+  entityName: string
+  entityId: number
+  oldValue?: string | null
+  newValue?: string | null
+  user: string
+  comment?: string | null
+  createdAt: string
+}

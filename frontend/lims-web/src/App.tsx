@@ -3,6 +3,7 @@ import AppLayout from './layouts/AppLayout'
 import DashboardPage from './pages/DashboardPage'
 import ClientsPage from './pages/ClientsPage'
 import SamplesPage from './pages/SamplesPage'
+import AuditTrailPage from './pages/AuditTrailPage'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/samples" element={<SamplesPage />} />
+          <Route path="/audit-trail" element={<AuditTrailPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>
