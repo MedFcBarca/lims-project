@@ -1,0 +1,7 @@
+psql -U abbadmohamed -d lims_demo_db
+
+Host: localhost
+Port: 5432
+Database: lims_demo_db
+Username: abbadmohamed
+Password: (laisse vide)

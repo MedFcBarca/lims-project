@@ -1,0 +1,6 @@
+@Lims.Api_HostAddress = http://localhost:5112
+
+GET {{Lims.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
