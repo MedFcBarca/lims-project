@@ -5,8 +5,16 @@ import ClientsPage from './pages/ClientsPage'
 import SamplesPage from './pages/SamplesPage'
 import AuditTrailPage from './pages/AuditTrailPage'
 import BatchesPage from './pages/BatchesPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
 function App() {
+  const token = localStorage.getItem('token')
+
+  if (!token) {
+    return <LoginPage />
+  }
+
   return (
     <BrowserRouter>
       <AppLayout>
@@ -16,6 +24,7 @@ function App() {
           <Route path="/samples" element={<SamplesPage />} />
           <Route path="/audit-trail" element={<AuditTrailPage />} />
           <Route path="/batches" element={<BatchesPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

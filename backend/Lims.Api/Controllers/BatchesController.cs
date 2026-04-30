@@ -3,10 +3,12 @@ using Lims.Api.DTOs;
 using Lims.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lims.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class BatchesController : ControllerBase
 {
@@ -47,6 +49,7 @@ public class BatchesController : ControllerBase
         return Ok(batches);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateBatchDto dto)
     {
@@ -61,6 +64,7 @@ public class BatchesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin,Validator")]
     [HttpPost("{id:int}/validate")]
     public async Task<IActionResult> ValidateBatch(int id)
     {

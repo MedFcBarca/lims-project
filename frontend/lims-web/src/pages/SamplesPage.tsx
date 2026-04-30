@@ -40,6 +40,11 @@ export default function SamplesPage() {
 
   const selectedSample = samples.find(s => s.id === selectedSampleId)
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+  const canWorkOnSamples = user.role === 'Admin' || user.role === 'Technician'
+  const canValidate = user.role === 'Admin' || user.role === 'Validator'
+
   const [batchId, setBatchId] = useState('')
   const [batches, setBatches] = useState<any[]>([])
   const [filterBatchId, setFilterBatchId] = useState('')
@@ -194,79 +199,80 @@ export default function SamplesPage() {
         <p className="text-slate-400">Laboratory samples, analyses & validation workflow</p>
         <h2 className="text-4xl font-black tracking-tight">Samples</h2>
       </div>
+    {canWorkOnSamples && (
+        <div className="mb-8 rounded-[28px] bg-[#fff4f1] p-8 shadow-xl shadow-slate-100">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-black">Create new sample</h3>
+              <p className="text-sm text-slate-400">Register a new laboratory sample</p>
+            </div>
 
-      <div className="mb-8 rounded-[28px] bg-[#fff4f1] p-8 shadow-xl shadow-slate-100">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-black">Create new sample</h3>
-            <p className="text-sm text-slate-400">Register a new laboratory sample</p>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#34348b] text-white">
+              <Plus />
+            </div>
           </div>
 
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#34348b] text-white">
-            <Plus />
+          <div className="grid grid-cols-5 gap-5">
+            <input
+              placeholder="Sample code"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+            />
+
+            <select
+              value={type}
+              onChange={e => setType(e.target.value)}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+            >
+              <option value="Eau">Eau</option>
+              <option value="Sol">Sol</option>
+              <option value="Alimentaire">Alimentaire</option>
+              <option value="Santé animale">Santé animale</option>
+            </select>
+
+            <select
+              value={status}
+              onChange={e => setStatus(e.target.value)}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+            >
+              <option value="Received">Received</option>
+            </select>
+
+            <select
+              value={clientId}
+              onChange={e => setClientId(e.target.value)}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+            >
+              <option value="">Select client</option>
+              {clients.map(client => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={batchId}
+              onChange={e => setBatchId(e.target.value)}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+            >
+              <option value="">Select batch</option>
+              {batches.map(batch => (
+                <option key={batch.id} value={batch.id}>
+                  {batch.code}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <button
+            onClick={createSample}
+            className="mt-6 rounded-2xl bg-[#34348b] px-6 py-4 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-[#292976]"
+          >
+            Create sample
+          </button>
         </div>
-
-        <div className="grid grid-cols-5 gap-5">
-          <input
-            placeholder="Sample code"
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
-          />
-
-          <select
-            value={type}
-            onChange={e => setType(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
-          >
-            <option value="Eau">Eau</option>
-            <option value="Sol">Sol</option>
-            <option value="Alimentaire">Alimentaire</option>
-            <option value="Santé animale">Santé animale</option>
-          </select>
-
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
-          >
-            <option value="Received">Received</option>
-          </select>
-
-          <select
-            value={clientId}
-            onChange={e => setClientId(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
-          >
-            <option value="">Select client</option>
-            {clients.map(client => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={batchId}
-            onChange={e => setBatchId(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
-          >
-            <option value="">Select batch</option>
-            {batches.map(batch => (
-              <option key={batch.id} value={batch.id}>
-                {batch.code}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          onClick={createSample}
-          className="mt-6 rounded-2xl bg-[#34348b] px-6 py-4 font-bold text-white shadow-lg shadow-indigo-200 hover:bg-[#292976]"
-        >
-          Create sample
-        </button>
-      </div>
+      )}
       <div className="mb-8 rounded-[24px] bg-white p-5 shadow-xl shadow-slate-100">
       <select
         value={filterBatchId}
@@ -331,63 +337,64 @@ export default function SamplesPage() {
                   <StatusBadge status={selectedSample.status} />
                 </div>
               </div>
+              {canWorkOnSamples && (
+                <div className="mb-8 rounded-[24px] bg-slate-50 p-5">
+                  <h4 className="mb-4 flex items-center gap-2 font-black">
+                    <Activity size={18} />
+                    {editingAnalysisId ? 'Edit analysis' : 'Add analysis'}
+                  </h4>
 
-              <div className="mb-8 rounded-[24px] bg-slate-50 p-5">
-                <h4 className="mb-4 flex items-center gap-2 font-black">
-                  <Activity size={18} />
-                  {editingAnalysisId ? 'Edit analysis' : 'Add analysis'}
-                </h4>
-
-                <div className="grid gap-3">
-                  <input
-                    placeholder="Parameter"
-                    value={parameter}
-                    onChange={e => setParameter(e.target.value)}
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
-                  />
-
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid gap-3">
                     <input
-                      placeholder="Value"
-                      value={value}
-                      onChange={e => setValue(e.target.value)}
+                      placeholder="Parameter"
+                      value={parameter}
+                      onChange={e => setParameter(e.target.value)}
                       className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
                     />
 
-                    <input
-                      placeholder="Unit"
-                      value={unit}
-                      onChange={e => setUnit(e.target.value)}
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
-                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input
+                        placeholder="Value"
+                        value={value}
+                        onChange={e => setValue(e.target.value)}
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
+                      />
 
-                    <input
-                      placeholder="Threshold"
-                      value={threshold}
-                      onChange={e => setThreshold(e.target.value)}
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
-                    />
-                  </div>
+                      <input
+                        placeholder="Unit"
+                        value={unit}
+                        onChange={e => setUnit(e.target.value)}
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
+                      />
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={saveAnalysis}
-                      className="flex-1 rounded-2xl bg-[#34348b] px-5 py-3 font-bold text-white hover:bg-[#292976]"
-                    >
-                      {editingAnalysisId ? 'Update analysis' : 'Add analysis'}
-                    </button>
+                      <input
+                        placeholder="Threshold"
+                        value={threshold}
+                        onChange={e => setThreshold(e.target.value)}
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
+                      />
+                    </div>
 
-                    {editingAnalysisId && (
+                    <div className="flex gap-3">
                       <button
-                        onClick={cancelEdit}
-                        className="rounded-2xl bg-slate-200 px-5 py-3 font-bold text-slate-700 hover:bg-slate-300"
+                        onClick={saveAnalysis}
+                        className="flex-1 rounded-2xl bg-[#34348b] px-5 py-3 font-bold text-white hover:bg-[#292976]"
                       >
-                        Cancel
+                        {editingAnalysisId ? 'Update analysis' : 'Add analysis'}
                       </button>
-                    )}
+
+                      {editingAnalysisId && (
+                        <button
+                          onClick={cancelEdit}
+                          className="rounded-2xl bg-slate-200 px-5 py-3 font-bold text-slate-700 hover:bg-slate-300"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-3">
                 {selectedAnalyses.map(analysis => (
@@ -411,27 +418,31 @@ export default function SamplesPage() {
                           </span>
                         )}
 
-                        <button
-                          onClick={() => {
-                            setEditingAnalysisId(analysis.id)
-                            setParameter(analysis.parameter)
-                            setValue(String(analysis.value))
-                            setUnit(analysis.unit)
-                            setThreshold(String(analysis.threshold))
-                          }}
-                          className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-100"
-                        >
-                          <Pencil size={14} />
-                          Edit
-                        </button>
+                        {canWorkOnSamples && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingAnalysisId(analysis.id)
+                                setParameter(analysis.parameter)
+                                setValue(String(analysis.value))
+                                setUnit(analysis.unit)
+                                setThreshold(String(analysis.threshold))
+                              }}
+                              className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-100"
+                            >
+                              <Pencil size={14} />
+                              Edit
+                            </button>
 
-                        <button
-                          onClick={() => setAnalysisToDelete(analysis)}
-                          className="flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-200"
-                        >
-                          <XCircle size={14} />
-                          Delete
-                        </button>
+                            <button
+                              onClick={() => setAnalysisToDelete(analysis)}
+                              className="flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-200"
+                            >
+                              <XCircle size={14} />
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -459,23 +470,27 @@ export default function SamplesPage() {
                 </button>
               </div>
 
-              <button
-                onClick={() => completeSample(selectedSample.id)}
-                disabled={selectedAnalyses.length === 0 || selectedSample.status !== 'InProgress'}
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-100 px-5 py-4 font-black text-blue-700 hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Activity size={18} />
-                Mark as completed
-              </button>
+              {canWorkOnSamples && (
+                <button
+                  onClick={() => completeSample(selectedSample.id)}
+                  disabled={selectedAnalyses.length === 0 || selectedSample.status !== 'InProgress'}
+                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-100 px-5 py-4 font-black text-blue-700 hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Activity size={18} />
+                  Mark as completed
+                </button>
+              )}
 
-              <button
-                onClick={() => validateSample(selectedSample.id)}
-                disabled={selectedSample.status !== 'Completed'}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-5 py-4 font-black text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <CheckCircle2 size={18} />
-                Validate selected sample
-              </button>
+              {canValidate && (
+                <button
+                  onClick={() => validateSample(selectedSample.id)}
+                  disabled={selectedSample.status !== 'Completed'}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-5 py-4 font-black text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <CheckCircle2 size={18} />
+                  Validate selected sample
+                </button>
+              )}
 
               <div className="mt-4 rounded-[24px] bg-slate-50 p-5">
                 <h4 className="mb-4 flex items-center gap-2 font-black">

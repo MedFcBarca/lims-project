@@ -4,10 +4,12 @@ using Lims.Api.Models;
 using Lims.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lims.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AnalysesController : ControllerBase
 {
@@ -31,6 +33,7 @@ public class AnalysesController : ControllerBase
         return Ok(analyses);
     }
 
+    [Authorize(Roles = "Admin,Technician")]
     [HttpPost]
     public async Task<IActionResult> CreateAnalysis(CreateAnalysisDto dto)
     {
@@ -45,6 +48,7 @@ public class AnalysesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin,Technician")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAnalysis(int id, CreateAnalysisDto dto)
     {
@@ -59,6 +63,7 @@ public class AnalysesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin,Technician")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
