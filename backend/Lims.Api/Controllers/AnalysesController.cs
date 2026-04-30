@@ -12,12 +12,12 @@ namespace Lims.Api.Controllers;
 public class AnalysesController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private readonly AuditService _audit;
+    private readonly AnalysisService _analysisService;
 
-    public AnalysesController(AppDbContext context, AuditService audit)
+    public AnalysesController(AppDbContext context, AnalysisService analysisService)
     {
         _context = context;
-        _audit = audit;
+        _analysisService = analysisService;
     }
 
     [HttpGet]
@@ -31,137 +31,45 @@ public class AnalysesController : ControllerBase
         return Ok(analyses);
     }
 
-[HttpPost]
-public async Task<ActionResult> CreateAnalysis(CreateAnalysisDto dto)
-{
-    var sample = await _context.Samples.FindAsync(dto.SampleId);
-
-    if (sample == null)
-        return BadRequest("Sample not found");
-
-    var analysis = new Analysis
+    [HttpPost]
+    public async Task<IActionResult> CreateAnalysis(CreateAnalysisDto dto)
     {
-        Parameter = dto.Parameter,
-        Value = dto.Value,
-        Unit = dto.Unit,
-        Threshold = dto.Threshold,
-        IsCompliant = dto.Value <= dto.Threshold,
-        SampleId = dto.SampleId
-    };
-
-    _context.Analyses.Add(analysis);
-
-    sample.Status = "InProgress";
-
-    var batch = await _context.Batches.FindAsync(sample.BatchId);
-
-    if (batch != null)
-        batch.Status = "InProgress";
-
-    await _context.SaveChangesAsync();
-
-    await _audit.LogAsync(
-        action: "AnalysisCreated",
-        entity: "Analysis",
-        entityId: analysis.Id,
-        sampleId: analysis.SampleId,
-        displayName: analysis.Parameter,
-        newValue: $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}",
-        comment: "Création analyse"
-    );
-
-    return Ok(new
-    {
-        analysis.Id,
-        analysis.Parameter,
-        analysis.Value,
-        analysis.Unit,
-        analysis.Threshold,
-        analysis.IsCompliant,
-        analysis.SampleId
-    });
-}
+        try
+        {
+            var result = await _analysisService.CreateAnalysisAsync(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAnalysis(int id, CreateAnalysisDto dto)
     {
-        var analysis = await _context.Analyses
-            .Include(a => a.Sample)
-            .FirstOrDefaultAsync(a => a.Id == id);
-
-        if (analysis == null)
-            return NotFound();
-
-        var oldValue = $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}";
-
-        var sample = await _context.Samples.FindAsync(dto.SampleId);
-
-        if (sample == null)
-            return BadRequest("Sample not found");
-
-        analysis.Parameter = dto.Parameter;
-        analysis.Value = dto.Value;
-        analysis.Unit = dto.Unit;
-        analysis.Threshold = dto.Threshold;
-        analysis.SampleId = dto.SampleId;
-
-        analysis.IsCompliant = dto.Value <= dto.Threshold;
-        
-        sample.Status = "InProgress";
-        var batch = await _context.Batches.FindAsync(sample.BatchId);
-
-        if (batch != null)
-         batch.Status = "InProgress";
-
-        await _context.SaveChangesAsync();
-
-        var newValue = $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}";
-
-        await _audit.LogAsync(
-        action: "AnalysisUpdated",
-        entity: "Analysis",
-        entityId: analysis.Id,
-        sampleId: analysis.SampleId,
-        displayName: analysis.Parameter,
-        oldValue: oldValue,
-        newValue: newValue,
-        comment: "Modification analyse"
-);
-
-        return NoContent();
+        try
+        {
+            await _analysisService.UpdateAnalysisAsync(id, dto);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var analysis = await _context.Analyses
-            .Include(a => a.Sample)
-            .FirstOrDefaultAsync(a => a.Id == id);
-
-        if (analysis == null)
-            return NotFound();
-
-        var oldValue = $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}";
-
-        analysis.Sample.Status = "InProgress";
-
-        var batch = await _context.Batches.FindAsync(analysis.Sample.BatchId);
-
-        if (batch != null)
-        batch.Status = "InProgress";
-        _context.Analyses.Remove(analysis);
-        await _context.SaveChangesAsync();
-
-        await _audit.LogAsync(
-        action: "AnalysisDeleted",
-        entity: "Analysis",
-        entityId: id,
-        sampleId: analysis.SampleId,
-        displayName: analysis.Parameter,
-        oldValue: oldValue,
-        comment: "Suppression analyse"
-);
-
-        return NoContent();
+        try
+        {
+            await _analysisService.DeleteAnalysisAsync(id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }
