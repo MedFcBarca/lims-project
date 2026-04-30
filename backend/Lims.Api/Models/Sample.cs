@@ -8,6 +8,9 @@ public class Sample
     public string Status { get; set; } = "Received";
 
     public int ClientId { get; set; }
+
+    public int BatchId { get; set; }
+    public Batch Batch { get; set; } = null!;
     public Client Client { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

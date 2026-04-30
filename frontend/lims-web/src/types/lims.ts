@@ -14,6 +14,11 @@ export type Sample = {
   clientId: number
   client?: Client
   createdAt: string
+  batchId: number
+  batch?: {
+    id: number
+    code: string
+  }
 }
 
 export type Analysis = {
@@ -31,9 +36,15 @@ export type AuditLog = {
   action: string
   entityName: string
   entityId: number
+
+  sampleId?: number | null
+  displayName?: string | null
+
   oldValue?: string | null
   newValue?: string | null
+
   user: string
   comment?: string | null
   createdAt: string
 }
+

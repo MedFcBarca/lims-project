@@ -31,31 +31,36 @@ public class AnalysesController : ControllerBase
         return Ok(analyses);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Analysis>> CreateAnalysis(CreateAnalysisDto dto)
+[HttpPost]
+public async Task<ActionResult> CreateAnalysis(CreateAnalysisDto dto)
+{
+    var sample = await _context.Samples.FindAsync(dto.SampleId);
+
+    if (sample == null)
+        return BadRequest("Sample not found");
+
+    var analysis = new Analysis
     {
-        var sample = await _context.Samples.FindAsync(dto.SampleId);
+        Parameter = dto.Parameter,
+        Value = dto.Value,
+        Unit = dto.Unit,
+        Threshold = dto.Threshold,
+        IsCompliant = dto.Value <= dto.Threshold,
+        SampleId = dto.SampleId
+    };
 
-        if (sample == null)
-            return BadRequest("Sample not found");
+    _context.Analyses.Add(analysis);
 
-        var analysis = new Analysis
-        {
-            Parameter = dto.Parameter,
-            Value = dto.Value,
-            Unit = dto.Unit,
-            Threshold = dto.Threshold,
-            IsCompliant = dto.Value <= dto.Threshold,
-            SampleId = dto.SampleId
-        };
+    sample.Status = "InProgress";
 
-        _context.Analyses.Add(analysis);
+    var batch = await _context.Batches.FindAsync(sample.BatchId);
 
-        sample.Status = "InProgress";
+    if (batch != null)
+        batch.Status = "InProgress";
 
-        await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync();
 
-        await _audit.LogAsync(
+    await _audit.LogAsync(
         action: "AnalysisCreated",
         entity: "Analysis",
         entityId: analysis.Id,
@@ -63,15 +68,26 @@ public class AnalysesController : ControllerBase
         displayName: analysis.Parameter,
         newValue: $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}",
         comment: "Création analyse"
-);
+    );
 
-        return Ok(analysis);
-    }
+    return Ok(new
+    {
+        analysis.Id,
+        analysis.Parameter,
+        analysis.Value,
+        analysis.Unit,
+        analysis.Threshold,
+        analysis.IsCompliant,
+        analysis.SampleId
+    });
+}
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAnalysis(int id, CreateAnalysisDto dto)
     {
-        var analysis = await _context.Analyses.FindAsync(id);
+        var analysis = await _context.Analyses
+            .Include(a => a.Sample)
+            .FirstOrDefaultAsync(a => a.Id == id);
 
         if (analysis == null)
             return NotFound();
@@ -92,6 +108,10 @@ public class AnalysesController : ControllerBase
         analysis.IsCompliant = dto.Value <= dto.Threshold;
         
         sample.Status = "InProgress";
+        var batch = await _context.Batches.FindAsync(sample.BatchId);
+
+        if (batch != null)
+         batch.Status = "InProgress";
 
         await _context.SaveChangesAsync();
 
@@ -125,6 +145,10 @@ public class AnalysesController : ControllerBase
 
         analysis.Sample.Status = "InProgress";
 
+        var batch = await _context.Batches.FindAsync(analysis.Sample.BatchId);
+
+        if (batch != null)
+        batch.Status = "InProgress";
         _context.Analyses.Remove(analysis);
         await _context.SaveChangesAsync();
 
