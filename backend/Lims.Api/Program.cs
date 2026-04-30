@@ -28,6 +28,9 @@ builder.Services.AddScoped<PdfReportService>();
 builder.Services.AddHttpClient<TranslationService>();
 builder.Services.AddHttpClient<OcrService>();
 builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<SampleService>();
+builder.Services.AddScoped<BatchService>();
+builder.Services.AddScoped<AnalysisService>();
 var app = builder.Build();
 
 

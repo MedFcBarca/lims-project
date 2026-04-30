@@ -1,6 +1,5 @@
 using Lims.Api.Data;
 using Lims.Api.DTOs;
-using Lims.Api.Models;
 using Lims.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,136 +11,98 @@ namespace Lims.Api.Controllers;
 public class SamplesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly SampleService _sampleService;
     private readonly PdfReportService _pdfReportService;
 
-    public SamplesController(AppDbContext context, PdfReportService pdfReportService)
+    public SamplesController(
+        AppDbContext context,
+        SampleService sampleService,
+        PdfReportService pdfReportService)
     {
         _context = context;
+        _sampleService = sampleService;
         _pdfReportService = pdfReportService;
     }
 
+    // ✅ OK de garder ici (lecture simple)
     [HttpGet]
-public async Task<IActionResult> GetSamples()
-{
-    var samples = await _context.Samples
-        .Include(s => s.Client)
-        .Include(s => s.Batch)
-        .OrderByDescending(s => s.CreatedAt)
-        .Select(s => new
-        {
-            s.Id,
-            s.Code,
-            s.Type,
-            s.Status,
-            s.ClientId,
-            Client = new
+    public async Task<IActionResult> GetSamples()
+    {
+        var samples = await _context.Samples
+            .Include(s => s.Client)
+            .Include(s => s.Batch)
+            .OrderByDescending(s => s.CreatedAt)
+            .Select(s => new
             {
-                s.Client.Id,
-                s.Client.Name,
-                s.Client.Email,
-                s.Client.Domain
-            },
-            s.BatchId,
-            Batch = new
-            {
-                s.Batch.Id,
-                s.Batch.Code
-            },
-            s.CreatedAt
-        })
-        .ToListAsync();
+                s.Id,
+                s.Code,
+                s.Type,
+                s.Status,
+                s.ClientId,
+                Client = new
+                {
+                    s.Client.Id,
+                    s.Client.Name,
+                    s.Client.Email,
+                    s.Client.Domain
+                },
+                s.BatchId,
+                Batch = new
+                {
+                    s.Batch.Id,
+                    s.Batch.Code
+                },
+                s.CreatedAt
+            })
+            .ToListAsync();
 
-    return Ok(samples);
-}
+        return Ok(samples);
+    }
 
+    // 🔥 MAINTENANT → passe par service
     [HttpPost]
-public async Task<ActionResult> CreateSample(CreateSampleDto dto)
-{
-    var client = await _context.Clients.FindAsync(dto.ClientId);
-
-    if (client == null)
-        return BadRequest("Client not found");
-
-    var batch = await _context.Batches.FindAsync(dto.BatchId);
-
-    if (batch == null)
-        return BadRequest("Batch not found");
-
-    var sample = new Sample
+    public async Task<IActionResult> CreateSample(CreateSampleDto dto)
     {
-        Code = dto.Code,
-        Type = dto.Type,
-        Status = dto.Status,
-        ClientId = dto.ClientId,
-        BatchId = dto.BatchId
-    };
+        try
+        {
+            var result = await _sampleService.CreateSampleAsync(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
-    _context.Samples.Add(sample);
-
-    batch.Status = "InProgress";
-
-    await _context.SaveChangesAsync();
-
-    return Ok(new
-    {
-        sample.Id,
-        sample.Code,
-        sample.Type,
-        sample.Status,
-        sample.ClientId,
-        sample.BatchId,
-        sample.CreatedAt
-    });
-}
     [HttpPost("{id:int}/complete")]
     public async Task<IActionResult> CompleteSample(int id)
     {
-        var sample = await _context.Samples.FindAsync(id);
-
-        if (sample == null)
-            return NotFound();
-
-        var analyses = await _context.Analyses
-            .Where(a => a.SampleId == id)
-            .ToListAsync();
-
-        if (!analyses.Any())
-            return BadRequest("No analyses found");
-
-        sample.Status = "Completed";
-
-        await _context.SaveChangesAsync();
-
-        return Ok(sample);
+        try
+        {
+            var sample = await _sampleService.CompleteSampleAsync(id);
+            return Ok(sample);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("{id:int}/validate")]
-public async Task<IActionResult> ValidateSample(int id)
-{
-    var sample = await _context.Samples.FindAsync(id);
+    public async Task<IActionResult> ValidateSample(int id)
+    {
+        try
+        {
+            var sample = await _sampleService.ValidateSampleAsync(id);
+            return Ok(sample);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
-    if (sample == null)
-        return NotFound();
-
-    if (sample.Status != "Completed")
-        return BadRequest("Sample must be completed before validation");
-
-    var analyses = await _context.Analyses
-        .Where(a => a.SampleId == id)
-        .ToListAsync();
-
-    if (!analyses.Any())
-        return BadRequest("No analyses found");
-
-    var hasNonCompliant = analyses.Any(a => !a.IsCompliant);
-
-    sample.Status = hasNonCompliant ? "Rejected" : "Validated";
-
-    await _context.SaveChangesAsync();
-
-    return Ok(sample);
-}
-
+    // ✅ reste ici (logique PDF spécifique)
     [HttpGet("{id:int}/report")]
     public async Task<IActionResult> DownloadReport(int id, [FromQuery] string language = "fr")
     {
