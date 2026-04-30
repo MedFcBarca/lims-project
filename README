@@ -5,3 +5,19 @@ Port: 5432
 Database: lims_demo_db
 Username: abbadmohamed
 Password: (laisse vide)
+
+
+
+
+{
+  "fullName": "Mohamed Abbad",
+  "email": "admin@lims.com",
+  "password": "admin123",
+  "role": "Admin"
+}
+
+technicien@lims.com
+tech123
+
+validator@lims.com
+vali123

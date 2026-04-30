@@ -3,10 +3,12 @@ using Lims.Api.DTOs;
 using Lims.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lims.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class SamplesController : ControllerBase
 {
@@ -24,7 +26,6 @@ public class SamplesController : ControllerBase
         _pdfReportService = pdfReportService;
     }
 
-    // ✅ OK de garder ici (lecture simple)
     [HttpGet]
     public async Task<IActionResult> GetSamples()
     {
@@ -59,7 +60,7 @@ public class SamplesController : ControllerBase
         return Ok(samples);
     }
 
-    // 🔥 MAINTENANT → passe par service
+    [Authorize(Roles = "Admin,Technician")]
     [HttpPost]
     public async Task<IActionResult> CreateSample(CreateSampleDto dto)
     {
@@ -74,6 +75,7 @@ public class SamplesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin,Technician")]
     [HttpPost("{id:int}/complete")]
     public async Task<IActionResult> CompleteSample(int id)
     {
@@ -88,6 +90,7 @@ public class SamplesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin,Validator")]
     [HttpPost("{id:int}/validate")]
     public async Task<IActionResult> ValidateSample(int id)
     {
@@ -102,7 +105,6 @@ public class SamplesController : ControllerBase
         }
     }
 
-    // ✅ reste ici (logique PDF spécifique)
     [HttpGet("{id:int}/report")]
     public async Task<IActionResult> DownloadReport(int id, [FromQuery] string language = "fr")
     {

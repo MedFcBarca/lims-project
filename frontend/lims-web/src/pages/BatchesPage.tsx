@@ -22,6 +22,10 @@ export default function BatchesPage() {
   const [samples, setSamples] = useState<Sample[]>([])
   const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null)
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const canCreateBatch = user.role === 'Admin'
+  const canValidateBatch = user.role === 'Admin' || user.role === 'Validator'
+
   const loadData = async () => {
     const [batchesRes, clientsRes, samplesRes] = await Promise.all([
     api.get('/batches'),
@@ -67,8 +71,8 @@ export default function BatchesPage() {
         <p className="text-slate-400">Group multiple samples under the same laboratory reception</p>
         <h2 className="text-4xl font-black tracking-tight">Batches</h2>
       </div>
-
-      <div className="mb-8 rounded-[28px] bg-[#fff4f1] p-8 shadow-xl shadow-slate-100">
+        {canCreateBatch && (
+       <div className="mb-8 rounded-[28px] bg-[#fff4f1] p-8 shadow-xl shadow-slate-100">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-2xl font-black">Create new batch</h3>
@@ -108,7 +112,7 @@ export default function BatchesPage() {
         >
           Create batch
         </button>
-      </div>
+      </div>)}
 
       <div className="grid grid-cols-2 gap-6">
         {batches.map(batch => (
@@ -144,19 +148,21 @@ export default function BatchesPage() {
                 <Calendar size={16} /> {new Date(batch.receivedAt).toLocaleDateString()}
               </p>
             </div>
-                <button
-                    onClick={e => {
-                        e.stopPropagation()
-                        validateBatch(batch.id)
-                        }}
-                    disabled={batch.samplesCount === 0}
-                    className="mt-6 w-full rounded-2xl bg-emerald-100 px-5 py-3 font-black text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                    Validate batch
-                </button>
+            {canValidateBatch && (
+                    <button
+                        onClick={e => {
+                            e.stopPropagation()
+                            validateBatch(batch.id)
+                            }}
+                        disabled={batch.samplesCount === 0}
+                        className="mt-6 w-full rounded-2xl bg-emerald-100 px-5 py-3 font-black text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                        Validate batch
+                    </button>
+                )}
             </div>
         ))}
-      </div>
+      </div> 
       {selectedBatchId && (
   <div className="mt-8 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
     <h3 className="mb-6 text-2xl font-black">Samples in selected batch</h3>
