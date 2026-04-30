@@ -9,7 +9,7 @@ import {
   Activity,
   Pencil,
   FileDown,
-  Upload
+  Upload,
 } from 'lucide-react'
 import { api } from '../api/api'
 import type { Analysis, Client, Sample } from '../types/lims'
@@ -21,7 +21,7 @@ export default function SamplesPage() {
 
   const [code, setCode] = useState('')
   const [type, setType] = useState('Eau')
-  const [status, setStatus] = useState('Pending')
+  const [status, setStatus] = useState('Received')
   const [clientId, setClientId] = useState('')
 
   const [selectedSampleId, setSelectedSampleId] = useState<number | null>(null)
@@ -34,7 +34,6 @@ export default function SamplesPage() {
   const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null)
 
   const [pdfLanguage, setPdfLanguage] = useState('fr')
-  // OCR
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -73,7 +72,7 @@ export default function SamplesPage() {
 
     setCode('')
     setType('Eau')
-    setStatus('Pending')
+    setStatus('Received')
     setClientId('')
 
     await loadData()
@@ -113,18 +112,23 @@ export default function SamplesPage() {
     setThreshold('')
   }
 
+  const completeSample = async (id: number) => {
+    await api.post(`/samples/${id}/complete`)
+    await loadData()
+  }
+
   const validateSample = async (id: number) => {
     await api.post(`/samples/${id}/validate`)
     await loadData()
   }
 
   const deleteAnalysis = async () => {
-  if (!analysisToDelete) return
+    if (!analysisToDelete) return
 
-  await api.delete(`/analyses/${analysisToDelete.id}`)
-  setAnalysisToDelete(null)
-  await loadData()
-}
+    await api.delete(`/analyses/${analysisToDelete.id}`)
+    setAnalysisToDelete(null)
+    await loadData()
+  }
 
   const downloadPdf = () => {
     if (!selectedSample) return
@@ -134,26 +138,27 @@ export default function SamplesPage() {
       '_blank'
     )
   }
+
   const uploadOcr = async () => {
-  if (!file || !selectedSampleId) return
+    if (!file || !selectedSampleId) return
 
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
 
-    setIsUploading(true)
+      setIsUploading(true)
 
-    await api.post(`/ocr/extract-and-create/${selectedSampleId}`, formData)
+      await api.post(`/ocr/extract-and-create/${selectedSampleId}`, formData)
 
-    setFile(null)
-    await loadData()
-  } catch (e) {
-    console.error(e)
-    alert('OCR failed')
-  } finally {
-    setIsUploading(false)
+      setFile(null)
+      await loadData()
+    } catch (e) {
+      console.error(e)
+      alert('OCR failed')
+    } finally {
+      setIsUploading(false)
+    }
   }
-}
 
   useEffect(() => {
     loadData()
@@ -202,8 +207,7 @@ export default function SamplesPage() {
             onChange={e => setStatus(e.target.value)}
             className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
           >
-            <option value="Pending">Pending</option>
-            <option value="In Analysis">In Analysis</option>
+            <option value="Received">Received</option>
           </select>
 
           <select
@@ -232,12 +236,12 @@ export default function SamplesPage() {
         <div className="col-span-7 grid content-start gap-6">
           {samples.map(sample => (
             <button
-                key={sample.id}
-                onClick={() => setSelectedSampleId(sample.id)}
-                className={`h-fit rounded-[28px] bg-white p-7 text-left shadow-xl shadow-slate-100 transition hover:-translate-y-1 ${
-                    selectedSampleId === sample.id ? 'ring-4 ring-[#34348b]/20' : ''
-                }`}
-                >
+              key={sample.id}
+              onClick={() => setSelectedSampleId(sample.id)}
+              className={`h-fit rounded-[28px] bg-white p-7 text-left shadow-xl shadow-slate-100 transition hover:-translate-y-1 ${
+                selectedSampleId === sample.id ? 'ring-4 ring-[#34348b]/20' : ''
+              }`}
+            >
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 text-[#34348b]">
                   <FlaskConical size={30} />
@@ -269,6 +273,9 @@ export default function SamplesPage() {
                 <p className="text-sm text-slate-400">Selected sample</p>
                 <h3 className="text-3xl font-black">{selectedSample.code}</h3>
                 <p className="mt-1 text-slate-400">{selectedSample.client?.name}</p>
+                <div className="mt-3">
+                  <StatusBadge status={selectedSample.status} />
+                </div>
               </div>
 
               <div className="mb-8 rounded-[24px] bg-slate-50 p-5">
@@ -363,43 +370,54 @@ export default function SamplesPage() {
                           <Pencil size={14} />
                           Edit
                         </button>
+
                         <button
-                            onClick={() => setAnalysisToDelete(analysis)}
-                            className="flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-200"
-                            >
-                            <XCircle size={14} />
-                            Delete
-                            </button>
+                          onClick={() => setAnalysisToDelete(analysis)}
+                          className="flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-200"
+                        >
+                          <XCircle size={14} />
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-                            {/* ocr */}
-                <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
+
+              <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
                 <h4 className="mb-4 flex items-center gap-2 font-black">
-                    <Upload size={18} />
-                    Import analyses (OCR)
+                  <Upload size={18} />
+                  Import analyses (OCR)
                 </h4>
 
                 <input
-                    type="file"
-                    onChange={e => setFile(e.target.files?.[0] || null)}
-                    className="mb-3"
+                  type="file"
+                  onChange={e => setFile(e.target.files?.[0] || null)}
+                  className="mb-3"
                 />
 
                 <button
-                    onClick={uploadOcr}
-                    className="flex items-center gap-2 rounded-2xl bg-[#34348b] px-5 py-3 font-bold text-white hover:bg-[#292976]"
+                  onClick={uploadOcr}
+                  className="flex items-center gap-2 rounded-2xl bg-[#34348b] px-5 py-3 font-bold text-white hover:bg-[#292976]"
                 >
-                    <Upload size={16} />
-                    {isUploading ? 'Processing...' : 'Upload & extract'}
+                  <Upload size={16} />
+                  {isUploading ? 'Processing...' : 'Upload & extract'}
                 </button>
-                </div>
+              </div>
+
+              <button
+                onClick={() => completeSample(selectedSample.id)}
+                disabled={selectedAnalyses.length === 0 || selectedSample.status !== 'InProgress'}
+                className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-100 px-5 py-4 font-black text-blue-700 hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Activity size={18} />
+                Mark as completed
+              </button>
 
               <button
                 onClick={() => validateSample(selectedSample.id)}
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-5 py-4 font-black text-emerald-700 hover:bg-emerald-200"
+                disabled={selectedSample.status !== 'Completed'}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-5 py-4 font-black text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <CheckCircle2 size={18} />
                 Validate selected sample
@@ -439,51 +457,53 @@ export default function SamplesPage() {
           )}
         </div>
       </div>
+
       {analysisToDelete && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="w-full max-w-md rounded-[28px] bg-white p-8 shadow-2xl">
-      <h3 className="text-2xl font-black">Delete analysis?</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-[28px] bg-white p-8 shadow-2xl">
+            <h3 className="text-2xl font-black">Delete analysis?</h3>
 
-      <p className="mt-3 text-slate-500">
-        Are you sure you want to delete{' '}
-        <span className="font-bold text-slate-900">
-          {analysisToDelete.parameter}
-        </span>
-        ?
-      </p>
+            <p className="mt-3 text-slate-500">
+              Are you sure you want to delete{' '}
+              <span className="font-bold text-slate-900">
+                {analysisToDelete.parameter}
+              </span>
+              ?
+            </p>
 
-      <div className="mt-8 flex gap-3">
-        <button
-          onClick={() => setAnalysisToDelete(null)}
-          className="flex-1 rounded-2xl bg-slate-100 px-5 py-3 font-bold text-slate-700 hover:bg-slate-200"
-        >
-          Cancel
-        </button>
+            <div className="mt-8 flex gap-3">
+              <button
+                onClick={() => setAnalysisToDelete(null)}
+                className="flex-1 rounded-2xl bg-slate-100 px-5 py-3 font-bold text-slate-700 hover:bg-slate-200"
+              >
+                Cancel
+              </button>
 
-        <button
-          onClick={deleteAnalysis}
-          className="flex-1 rounded-2xl bg-rose-600 px-5 py-3 font-bold text-white hover:bg-rose-700"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button
+                onClick={deleteAnalysis}
+                className="flex-1 rounded-2xl bg-rose-600 px-5 py-3 font-bold text-white hover:bg-rose-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    Pending: 'bg-amber-100 text-amber-700',
-    'In Analysis': 'bg-blue-100 text-blue-700',
+    Received: 'bg-slate-100 text-slate-700',
+    InProgress: 'bg-blue-100 text-blue-700',
+    Completed: 'bg-purple-100 text-purple-700',
     Validated: 'bg-emerald-100 text-emerald-700',
     Rejected: 'bg-rose-100 text-rose-700',
   }
 
   return (
-    <span className={`rounded-full px-4 py-2 text-sm font-black ${styles[status]}`}>
+    <span className={`rounded-full px-4 py-2 text-sm font-black ${styles[status] ?? 'bg-slate-100 text-slate-600'}`}>
       {status}
     </span>
   )

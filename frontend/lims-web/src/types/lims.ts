@@ -10,7 +10,7 @@ export type Sample = {
   id: number
   code: string
   type: string
-  status: 'Pending' | 'In Analysis' | 'Validated' | 'Rejected'
+  status: 'Received' | 'InProgress' | 'Completed' | 'Validated' | 'Rejected'
   clientId: number
   client?: Client
   createdAt: string

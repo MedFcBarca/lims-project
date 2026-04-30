@@ -42,7 +42,8 @@ export default function DashboardPage() {
   }
 
   const totalSamples = samples.length
-  const inAnalysis = samples.filter(s => s.status === 'In Analysis').length
+  const inProgress = samples.filter(s => s.status === 'InProgress').length
+  const completed = samples.filter(s => s.status === 'Completed').length
   const validated = samples.filter(s => s.status === 'Validated').length
   const rejected = samples.filter(s => s.status === 'Rejected').length
 
@@ -53,10 +54,11 @@ export default function DashboardPage() {
     analyses.length === 0 ? 0 : Math.round((compliantAnalyses / analyses.length) * 100)
 
   const statusChart = [
-    { name: 'Validated', value: validated },
-    { name: 'Rejected', value: rejected },
-    { name: 'In Analysis', value: inAnalysis },
-  ]
+  { name: 'InProgress', value: inProgress },
+  { name: 'Completed', value: completed },
+  { name: 'Validated', value: validated },
+  { name: 'Rejected', value: rejected },
+]
 
   const analysisChart = [
     { name: 'Conforme', value: compliantAnalyses },
@@ -99,7 +101,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-12 gap-8">
         <KpiCard icon={<FlaskConical />} title="Total samples" value={totalSamples} color="bg-cyan-100" />
-        <KpiCard icon={<Activity />} title="In analysis" value={inAnalysis} color="bg-blue-100" />
+        <KpiCard icon={<Activity />} title="In progress" value={inProgress} color="bg-blue-100" />
         <KpiCard icon={<CheckCircle2 />} title="Validated" value={validated} color="bg-emerald-100" />
         <KpiCard icon={<XCircle />} title="Rejected" value={rejected} color="bg-rose-100" />
 
@@ -113,7 +115,7 @@ export default function DashboardPage() {
 
         <div className="col-span-4 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
           <h3 className="mb-6 text-xl font-black">Samples status</h3>
-          <Chart data={statusChart} colors={['#10b981', '#ef4444', '#3b82f6']} />
+          <Chart data={statusChart} colors={['#3b82f6', '#8b5cf6', '#10b981', '#ef4444']} />
         </div>
 
         <div className="col-span-4 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
@@ -233,11 +235,12 @@ function Chart({ data, colors }: { data: { name: string; value: number }[]; colo
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    Pending: 'bg-amber-100 text-amber-700',
-    'In Analysis': 'bg-blue-100 text-blue-700',
-    Validated: 'bg-emerald-100 text-emerald-700',
-    Rejected: 'bg-rose-100 text-rose-700',
-  }
+  Received: 'bg-slate-100 text-slate-700',
+  InProgress: 'bg-blue-100 text-blue-700',
+  Completed: 'bg-purple-100 text-purple-700',
+  Validated: 'bg-emerald-100 text-emerald-700',
+  Rejected: 'bg-rose-100 text-rose-700',
+}
 
   return (
     <span className={`rounded-full px-4 py-2 text-xs font-black ${styles[status] ?? 'bg-slate-100 text-slate-600'}`}>
