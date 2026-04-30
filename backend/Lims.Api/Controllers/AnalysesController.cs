@@ -51,7 +51,7 @@ public class AnalysesController : ControllerBase
 
         _context.Analyses.Add(analysis);
 
-        sample.Status = "In Analysis";
+        sample.Status = "InProgress";
 
         await _context.SaveChangesAsync();
 
@@ -90,6 +90,8 @@ public class AnalysesController : ControllerBase
         analysis.SampleId = dto.SampleId;
 
         analysis.IsCompliant = dto.Value <= dto.Threshold;
+        
+        sample.Status = "InProgress";
 
         await _context.SaveChangesAsync();
 
@@ -112,12 +114,16 @@ public class AnalysesController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var analysis = await _context.Analyses.FindAsync(id);
+        var analysis = await _context.Analyses
+            .Include(a => a.Sample)
+            .FirstOrDefaultAsync(a => a.Id == id);
 
         if (analysis == null)
             return NotFound();
 
         var oldValue = $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}";
+
+        analysis.Sample.Status = "InProgress";
 
         _context.Analyses.Remove(analysis);
         await _context.SaveChangesAsync();

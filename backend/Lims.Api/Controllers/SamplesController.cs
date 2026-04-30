@@ -52,9 +52,8 @@ public class SamplesController : ControllerBase
 
         return Ok(sample);
     }
-
-    [HttpPost("{id:int}/validate")]
-    public async Task<IActionResult> ValidateSample(int id)
+    [HttpPost("{id:int}/complete")]
+    public async Task<IActionResult> CompleteSample(int id)
     {
         var sample = await _context.Samples.FindAsync(id);
 
@@ -68,14 +67,39 @@ public class SamplesController : ControllerBase
         if (!analyses.Any())
             return BadRequest("No analyses found");
 
-        var hasNonCompliant = analyses.Any(a => !a.IsCompliant);
-
-        sample.Status = hasNonCompliant ? "Rejected" : "Validated";
+        sample.Status = "Completed";
 
         await _context.SaveChangesAsync();
 
         return Ok(sample);
     }
+
+    [HttpPost("{id:int}/validate")]
+public async Task<IActionResult> ValidateSample(int id)
+{
+    var sample = await _context.Samples.FindAsync(id);
+
+    if (sample == null)
+        return NotFound();
+
+    if (sample.Status != "Completed")
+        return BadRequest("Sample must be completed before validation");
+
+    var analyses = await _context.Analyses
+        .Where(a => a.SampleId == id)
+        .ToListAsync();
+
+    if (!analyses.Any())
+        return BadRequest("No analyses found");
+
+    var hasNonCompliant = analyses.Any(a => !a.IsCompliant);
+
+    sample.Status = hasNonCompliant ? "Rejected" : "Validated";
+
+    await _context.SaveChangesAsync();
+
+    return Ok(sample);
+}
 
     [HttpGet("{id:int}/report")]
     public async Task<IActionResult> DownloadReport(int id, [FromQuery] string language = "fr")

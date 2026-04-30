@@ -53,7 +53,7 @@ public class OcrController : ControllerBase
 
         _context.Analyses.AddRange(analyses);
 
-        sample.Status = "In Analysis";
+        sample.Status = "InProgress";
 
         await _context.SaveChangesAsync();
 
