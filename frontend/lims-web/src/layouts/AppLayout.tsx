@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { BarChart3, FlaskConical, Users, Search, Bell, CheckCircle2, History } from 'lucide-react'
+import { BarChart3, FlaskConical, Users, Search, Bell, CheckCircle2, History,Boxes } from 'lucide-react'
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const nav = [
     { label: 'Dashboard', path: '/', icon: BarChart3 },
     { label: 'Clients', path: '/clients', icon: Users },
+    { label: 'Batches', path: '/batches', icon: Boxes },
     { label: 'Samples', path: '/samples', icon: FlaskConical },
     { label: 'Audit Trail', path: '/audit-trail', icon: History },
-
+    
   ]
 
   return (

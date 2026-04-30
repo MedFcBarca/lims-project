@@ -6,4 +6,5 @@ public class CreateSampleDto
     public string Type { get; set; } = string.Empty;
     public string Status { get; set; } = "Received";
     public int ClientId { get; set; }
+    public int BatchId { get; set; }
 }

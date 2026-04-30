@@ -21,37 +21,78 @@ public class SamplesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Sample>>> GetSamples()
-    {
-        var samples = await _context.Samples
-            .Include(s => s.Client)
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync();
+public async Task<IActionResult> GetSamples()
+{
+    var samples = await _context.Samples
+        .Include(s => s.Client)
+        .Include(s => s.Batch)
+        .OrderByDescending(s => s.CreatedAt)
+        .Select(s => new
+        {
+            s.Id,
+            s.Code,
+            s.Type,
+            s.Status,
+            s.ClientId,
+            Client = new
+            {
+                s.Client.Id,
+                s.Client.Name,
+                s.Client.Email,
+                s.Client.Domain
+            },
+            s.BatchId,
+            Batch = new
+            {
+                s.Batch.Id,
+                s.Batch.Code
+            },
+            s.CreatedAt
+        })
+        .ToListAsync();
 
-        return Ok(samples);
-    }
+    return Ok(samples);
+}
 
     [HttpPost]
-    public async Task<ActionResult<Sample>> CreateSample(CreateSampleDto dto)
+public async Task<ActionResult> CreateSample(CreateSampleDto dto)
+{
+    var client = await _context.Clients.FindAsync(dto.ClientId);
+
+    if (client == null)
+        return BadRequest("Client not found");
+
+    var batch = await _context.Batches.FindAsync(dto.BatchId);
+
+    if (batch == null)
+        return BadRequest("Batch not found");
+
+    var sample = new Sample
     {
-        var client = await _context.Clients.FindAsync(dto.ClientId);
+        Code = dto.Code,
+        Type = dto.Type,
+        Status = dto.Status,
+        ClientId = dto.ClientId,
+        BatchId = dto.BatchId
+    };
 
-        if (client == null)
-            return BadRequest("Client not found");
+    _context.Samples.Add(sample);
 
-        var sample = new Sample
-        {
-            Code = dto.Code,
-            Type = dto.Type,
-            Status = dto.Status,
-            ClientId = dto.ClientId
-        };
+    batch.Status = "InProgress";
 
-        _context.Samples.Add(sample);
-        await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync();
 
-        return Ok(sample);
-    }
+    return Ok(new
+    {
+        sample.Id,
+        sample.Code,
+        sample.Type,
+        sample.Status,
+        sample.ClientId,
+        sample.BatchId,
+        sample.CreatedAt
+    });
+}
     [HttpPost("{id:int}/complete")]
     public async Task<IActionResult> CompleteSample(int id)
     {

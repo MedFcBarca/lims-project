@@ -10,6 +10,7 @@ import {
   Pencil,
   FileDown,
   Upload,
+  Boxes
 } from 'lucide-react'
 import { api } from '../api/api'
 import type { Analysis, Client, Sample } from '../types/lims'
@@ -39,17 +40,29 @@ export default function SamplesPage() {
 
   const selectedSample = samples.find(s => s.id === selectedSampleId)
 
+  const [batchId, setBatchId] = useState('')
+  const [batches, setBatches] = useState<any[]>([])
+  const [filterBatchId, setFilterBatchId] = useState('')
+
   const selectedAnalyses = useMemo(() => {
     if (!selectedSampleId) return []
     return analyses.filter(a => a.sampleId === selectedSampleId)
   }, [analyses, selectedSampleId])
 
+  const filteredSamples = useMemo(() => {
+    if (!filterBatchId) return samples
+    return samples.filter(s => s.batchId === Number(filterBatchId))
+  }, [samples, filterBatchId])
+
   const loadData = async () => {
-    const [samplesRes, clientsRes, analysesRes] = await Promise.all([
-      api.get('/samples'),
-      api.get('/clients'),
-      api.get('/analyses'),
+    const [samplesRes, clientsRes, analysesRes, batchesRes] = await Promise.all([
+    api.get('/samples'),
+    api.get('/clients'),
+    api.get('/analyses'),
+    api.get('/batches'),
     ])
+
+    setBatches(batchesRes.data)
 
     setSamples(samplesRes.data)
     setClients(clientsRes.data)
@@ -61,15 +74,16 @@ export default function SamplesPage() {
   }
 
   const createSample = async () => {
-    if (!code || !type || !clientId) return
+    if (!code || !type || !clientId || !batchId) return
 
     await api.post('/samples', {
       code,
       type,
       status,
       clientId: Number(clientId),
+      batchId: Number(batchId),
     })
-
+    setBatchId('')
     setCode('')
     setType('Eau')
     setStatus('Received')
@@ -163,6 +177,16 @@ export default function SamplesPage() {
   useEffect(() => {
     loadData()
   }, [])
+  
+  useEffect(() => {
+    setSelectedSampleId(null)
+    setEditingAnalysisId(null)
+    setAnalysisToDelete(null)
+    setParameter('pH')
+    setValue('')
+    setUnit('')
+    setThreshold('')
+  }, [filterBatchId])
 
   return (
     <div>
@@ -183,7 +207,7 @@ export default function SamplesPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-5">
+        <div className="grid grid-cols-5 gap-5">
           <input
             placeholder="Sample code"
             value={code}
@@ -222,6 +246,18 @@ export default function SamplesPage() {
               </option>
             ))}
           </select>
+          <select
+            value={batchId}
+            onChange={e => setBatchId(e.target.value)}
+            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+          >
+            <option value="">Select batch</option>
+            {batches.map(batch => (
+              <option key={batch.id} value={batch.id}>
+                {batch.code}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button
@@ -231,10 +267,24 @@ export default function SamplesPage() {
           Create sample
         </button>
       </div>
+      <div className="mb-8 rounded-[24px] bg-white p-5 shadow-xl shadow-slate-100">
+      <select
+        value={filterBatchId}
+        onChange={e => setFilterBatchId(e.target.value)}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 outline-none focus:border-[#34348b]"
+      >
+        <option value="">All batches</option>
+        {batches.map(batch => (
+          <option key={batch.id} value={batch.id}>
+            {batch.code}
+          </option>
+        ))}
+      </select>
+    </div>
 
       <div className="grid grid-cols-12 items-start gap-8">
         <div className="col-span-7 grid content-start gap-6">
-          {samples.map(sample => (
+          {filteredSamples.map(sample => (
             <button
               key={sample.id}
               onClick={() => setSelectedSampleId(sample.id)}
@@ -256,6 +306,10 @@ export default function SamplesPage() {
               <div className="mt-6 space-y-3 text-sm text-slate-500">
                 <p className="flex items-center gap-2">
                   <Building2 size={16} /> {sample.client?.name}
+                </p>
+
+                <p className="flex items-center gap-2">
+                 <Boxes size={16} /> {sample.batch?.code ?? 'No batch'}
                 </p>
 
                 <p className="flex items-center gap-2">
