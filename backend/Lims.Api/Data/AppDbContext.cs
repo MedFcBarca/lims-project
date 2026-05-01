@@ -14,19 +14,31 @@ public class AppDbContext : DbContext
     public DbSet<Batch> Batches { get; set; }
     public DbSet<User> Users => Set<User>();
     public DbSet<StockItem> StockItems { get; set; }
+    public DbSet<SamplingRequest> SamplingRequests { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
+   protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Client>()
-            .HasMany<Sample>()
-            .WithOne(s => s.Client)
-            .HasForeignKey(s => s.ClientId);
+    modelBuilder.Entity<Client>()
+        .HasMany<Sample>()
+        .WithOne(s => s.Client)
+        .HasForeignKey(s => s.ClientId);
 
-        modelBuilder.Entity<Sample>()
-            .HasMany<Analysis>()
-            .WithOne(a => a.Sample)
-            .HasForeignKey(a => a.SampleId);
+    modelBuilder.Entity<Sample>()
+        .HasMany<Analysis>()
+        .WithOne(a => a.Sample)
+        .HasForeignKey(a => a.SampleId);
+
+    modelBuilder.Entity<SamplingRequest>()
+        .HasOne(sr => sr.Client)
+        .WithMany()
+        .HasForeignKey(sr => sr.ClientId);
+
+    modelBuilder.Entity<SamplingRequest>()
+        .HasOne(sr => sr.Sample)
+        .WithMany()
+        .HasForeignKey(sr => sr.SampleId)
+        .IsRequired(false);
     }
 }

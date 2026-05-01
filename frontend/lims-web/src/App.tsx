@@ -8,6 +8,7 @@ import BatchesPage from './pages/BatchesPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import StockPage from './pages/StockPage'
+import SamplingRequestsPage from './pages/SamplingRequestsPage'
 
 function App() {
   const token = localStorage.getItem('token')
@@ -27,6 +28,7 @@ function App() {
           <Route path="/batches" element={<BatchesPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/stock" element={<StockPage />} />
+          <Route path="/planning" element={<SamplingRequestsPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

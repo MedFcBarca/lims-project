@@ -12,6 +12,7 @@ public class Sample
     public int BatchId { get; set; }
     public Batch Batch { get; set; } = null!;
     public Client Client { get; set; } = null!;
+    public int? SamplingRequestId { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
