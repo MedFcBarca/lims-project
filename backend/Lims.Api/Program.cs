@@ -55,6 +55,8 @@ builder.Services.AddScoped<BatchService>();
 builder.Services.AddScoped<AnalysisService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SamplingRequestService>();
+builder.Services.AddScoped<InvoicePdfService>();
+builder.Services.AddScoped<QuotePdfService>();
 
 var app = builder.Build();
 

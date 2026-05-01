@@ -15,6 +15,9 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<StockItem> StockItems { get; set; }
     public DbSet<SamplingRequest> SamplingRequests { get; set; }
+    public DbSet<Quote> Quotes { get; set; }
+    public DbSet<Invoice> Invoices { get; set; }
+    public DbSet<InvoiceLine> InvoiceLines { get; set; }
 
    protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
