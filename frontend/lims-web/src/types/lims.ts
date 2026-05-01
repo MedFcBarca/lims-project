@@ -19,6 +19,8 @@ export type Sample = {
     id: number
     code: string
   }
+  samplingRequestId?: number | null,
+  samplingRequestCode?: string | null
 }
 
 export type Analysis = {

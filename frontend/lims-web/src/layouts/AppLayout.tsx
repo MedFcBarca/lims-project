@@ -10,7 +10,8 @@ import {
   History,
   Boxes,
   UserPlus,
-  Package
+  Package,
+  ClipboardList
 } from 'lucide-react'
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -22,6 +23,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     { label: 'Audit Trail', path: '/audit-trail', icon: History },
     { label: 'Register', path: '/register', icon: UserPlus },
     { label: 'Stock', path: '/stock', icon: Package },
+    { label: 'Planning', path: '/planning', icon: ClipboardList },
   ]
 
   //  USER CONNECTÉ

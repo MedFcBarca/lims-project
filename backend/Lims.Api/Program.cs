@@ -54,6 +54,7 @@ builder.Services.AddScoped<SampleService>();
 builder.Services.AddScoped<BatchService>();
 builder.Services.AddScoped<AnalysisService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<SamplingRequestService>();
 
 var app = builder.Build();
 

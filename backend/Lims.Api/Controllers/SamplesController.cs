@@ -27,38 +27,43 @@ public class SamplesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetSamples()
-    {
-        var samples = await _context.Samples
-            .Include(s => s.Client)
-            .Include(s => s.Batch)
-            .OrderByDescending(s => s.CreatedAt)
-            .Select(s => new
+public async Task<IActionResult> GetSamples()
+{
+    var samples = await _context.Samples
+        .Include(s => s.Client)
+        .Include(s => s.Batch)
+        .OrderByDescending(s => s.CreatedAt)
+        .Select(s => new
+        {
+            s.Id,
+            s.Code,
+            s.Type,
+            s.Status,
+            s.ClientId,
+            Client = new
             {
-                s.Id,
-                s.Code,
-                s.Type,
-                s.Status,
-                s.ClientId,
-                Client = new
-                {
-                    s.Client.Id,
-                    s.Client.Name,
-                    s.Client.Email,
-                    s.Client.Domain
-                },
-                s.BatchId,
-                Batch = new
-                {
-                    s.Batch.Id,
-                    s.Batch.Code
-                },
-                s.CreatedAt
-            })
-            .ToListAsync();
+                s.Client.Id,
+                s.Client.Name,
+                s.Client.Email,
+                s.Client.Domain
+            },
+            s.BatchId,
+            Batch = new
+            {
+                s.Batch.Id,
+                s.Batch.Code
+            },
+            s.SamplingRequestId,
+            SamplingRequestCode = _context.SamplingRequests
+                .Where(r => r.Id == s.SamplingRequestId)
+                .Select(r => r.Code)
+                .FirstOrDefault(),
+            s.CreatedAt
+        })
+        .ToListAsync();
 
-        return Ok(samples);
-    }
+    return Ok(samples);
+}
 
     [Authorize(Roles = "Admin,Technician")]
     [HttpPost]

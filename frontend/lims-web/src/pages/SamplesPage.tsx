@@ -10,7 +10,8 @@ import {
   Pencil,
   FileDown,
   Upload,
-  Boxes
+  Boxes,
+  ClipboardList
 } from 'lucide-react'
 import { api } from '../api/api'
 import type { Analysis, Client, Sample } from '../types/lims'
@@ -328,6 +329,11 @@ export default function SamplesPage() {
                 <p className="flex items-center gap-2">
                  <Boxes size={16} /> {sample.batch?.code ?? 'No batch'}
                 </p>
+                {sample.samplingRequestId && (
+                <p className="flex items-center gap-2">
+                  <ClipboardList size={16} /> Planning request {sample.samplingRequestCode ?? `#${sample.samplingRequestId}`}
+                </p>
+              )}
 
                 <p className="flex items-center gap-2">
                   <Calendar size={16} /> {new Date(sample.createdAt).toLocaleDateString()}
