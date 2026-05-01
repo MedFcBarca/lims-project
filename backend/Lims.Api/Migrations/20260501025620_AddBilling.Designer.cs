@@ -3,6 +3,7 @@ using System;
 using Lims.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lims.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260501025620_AddBilling")]
+    partial class AddBilling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -173,9 +176,6 @@ namespace Lims.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AnalysesCount")
-                        .HasColumnType("integer");
-
                     b.Property<int>("BatchId")
                         .HasColumnType("integer");
 
@@ -189,10 +189,6 @@ namespace Lims.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
 
@@ -203,31 +199,6 @@ namespace Lims.Api.Migrations
                     b.HasIndex("ClientId");
 
                     b.ToTable("Invoices");
-                });
-
-            modelBuilder.Entity("Lims.Api.Models.InvoiceLine", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.ToTable("InvoiceLines");
                 });
 
             modelBuilder.Entity("Lims.Api.Models.Quote", b =>
@@ -460,17 +431,6 @@ namespace Lims.Api.Migrations
                     b.Navigation("Client");
                 });
 
-            modelBuilder.Entity("Lims.Api.Models.InvoiceLine", b =>
-                {
-                    b.HasOne("Lims.Api.Models.Invoice", "Invoice")
-                        .WithMany("Lines")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Invoice");
-                });
-
             modelBuilder.Entity("Lims.Api.Models.Quote", b =>
                 {
                     b.HasOne("Lims.Api.Models.Client", "Client")
@@ -521,11 +481,6 @@ namespace Lims.Api.Migrations
             modelBuilder.Entity("Lims.Api.Models.Batch", b =>
                 {
                     b.Navigation("Samples");
-                });
-
-            modelBuilder.Entity("Lims.Api.Models.Invoice", b =>
-                {
-                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

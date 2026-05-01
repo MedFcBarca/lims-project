@@ -11,7 +11,8 @@ import {
   Boxes,
   UserPlus,
   Package,
-  ClipboardList
+  ClipboardList,
+  Receipt
 } from 'lucide-react'
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -24,6 +25,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     { label: 'Register', path: '/register', icon: UserPlus },
     { label: 'Stock', path: '/stock', icon: Package },
     { label: 'Planning', path: '/planning', icon: ClipboardList },
+    { label: 'Billing', path: '/billing', icon: Receipt },
   ]
 
   //  USER CONNECTÉ
