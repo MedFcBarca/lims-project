@@ -23,6 +23,22 @@ public class AnalysisService
         if (sample == null)
             throw new Exception("Sample not found");
 
+        StockItem? stock = null;
+
+        if (dto.StockItemId != null)
+        {
+            stock = await _context.StockItems.FindAsync(dto.StockItemId);
+
+            if (stock == null)
+                throw new Exception("Stock item not found");
+
+            if (stock.Quantity <= 0)
+                throw new Exception("Out of stock");
+
+            if (stock.ExpirationDate < DateTime.UtcNow)
+                throw new Exception("Stock expired");
+        }
+
         var analysis = new Analysis
         {
             Parameter = dto.Parameter,
@@ -30,10 +46,14 @@ public class AnalysisService
             Unit = dto.Unit,
             Threshold = dto.Threshold,
             IsCompliant = dto.Value <= dto.Threshold,
-            SampleId = dto.SampleId
+            SampleId = dto.SampleId,
+            StockItemId = dto.StockItemId
         };
 
         _context.Analyses.Add(analysis);
+
+        if (stock != null)
+            stock.Quantity -= 1;
 
         sample.Status = "InProgress";
 
@@ -51,7 +71,9 @@ public class AnalysisService
             sampleId: analysis.SampleId,
             displayName: analysis.Parameter,
             newValue: $"{analysis.Parameter} = {analysis.Value} {analysis.Unit}",
-            comment: "Création analyse"
+            comment: stock == null
+                ? "Création analyse"
+                : $"Création analyse avec stock {stock.Name} / lot {stock.LotNumber}"
         );
 
         return new
@@ -62,7 +84,8 @@ public class AnalysisService
             analysis.Unit,
             analysis.Threshold,
             analysis.IsCompliant,
-            analysis.SampleId
+            analysis.SampleId,
+            analysis.StockItemId
         };
     }
 
@@ -82,11 +105,30 @@ public class AnalysisService
         if (sample == null)
             throw new Exception("Sample not found");
 
+        StockItem? stock = null;
+
+        if (dto.StockItemId != null && dto.StockItemId != analysis.StockItemId)
+        {
+            stock = await _context.StockItems.FindAsync(dto.StockItemId);
+
+            if (stock == null)
+                throw new Exception("Stock item not found");
+
+            if (stock.Quantity <= 0)
+                throw new Exception("Out of stock");
+
+            if (stock.ExpirationDate < DateTime.UtcNow)
+                throw new Exception("Stock expired");
+
+            stock.Quantity -= 1;
+        }
+
         analysis.Parameter = dto.Parameter;
         analysis.Value = dto.Value;
         analysis.Unit = dto.Unit;
         analysis.Threshold = dto.Threshold;
         analysis.SampleId = dto.SampleId;
+        analysis.StockItemId = dto.StockItemId;
         analysis.IsCompliant = dto.Value <= dto.Threshold;
 
         sample.Status = "InProgress";

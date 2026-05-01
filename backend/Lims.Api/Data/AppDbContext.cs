@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Batch> Batches { get; set; }
     public DbSet<User> Users => Set<User>();
+    public DbSet<StockItem> StockItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
