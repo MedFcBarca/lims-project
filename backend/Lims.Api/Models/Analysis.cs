@@ -13,4 +13,6 @@ public class Analysis
 
     public int SampleId { get; set; }
     public Sample Sample { get; set; } = null!;
+    public int? StockItemId { get; set; }
+    public StockItem? StockItem { get; set; }
 }
