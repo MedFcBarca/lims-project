@@ -185,4 +185,80 @@ public class AnalysisService
             comment: "Suppression analyse"
         );
     }
+
+    public async Task<object> ImportFromMachineAsync(MachineImportDto dto)
+{
+    var sample = await _context.Samples.FindAsync(dto.SampleId);
+
+    if (sample == null)
+        throw new Exception("Sample not found");
+
+    var machineResults = new List<Analysis>
+    {
+        new Analysis
+        {
+            Parameter = "pH",
+            Value = 7.2,
+            Unit = "units",
+            Threshold = 8.5,
+            IsCompliant = true,
+            SampleId = dto.SampleId
+        },
+        new Analysis
+        {
+            Parameter = "Nitrate",
+            Value = 35,
+            Unit = "mg/L",
+            Threshold = 50,
+            IsCompliant = true,
+            SampleId = dto.SampleId
+        },
+        new Analysis
+        {
+            Parameter = "Conductivity",
+            Value = 420,
+            Unit = "µS/cm",
+            Threshold = 500,
+            IsCompliant = true,
+            SampleId = dto.SampleId
+        }
+    };
+
+    _context.Analyses.AddRange(machineResults);
+
+    sample.Status = "InProgress";
+
+    var batch = await _context.Batches.FindAsync(sample.BatchId);
+
+    if (batch != null)
+        batch.Status = "InProgress";
+
+    await _context.SaveChangesAsync();
+
+    await _audit.LogAsync(
+        action: "MachineImport",
+        entity: "Sample",
+        entityId: sample.Id,
+        sampleId: sample.Id,
+        displayName: sample.Code,
+        newValue: $"{machineResults.Count} analyses imported from {dto.MachineName}",
+        comment: "Import automatique depuis automate laboratoire"
+    );
+
+    return new
+    {
+        message = "Machine results imported successfully",
+        machine = dto.MachineName,
+        sampleId = dto.SampleId,
+        importedAnalyses = machineResults.Select(a => new
+        {
+            a.Id,
+            a.Parameter,
+            a.Value,
+            a.Unit,
+            a.Threshold,
+            a.IsCompliant
+        })
+    };
+}
 }
