@@ -49,6 +49,9 @@ export default function SamplesPage() {
   const [batches, setBatches] = useState<any[]>([])
   const [filterBatchId, setFilterBatchId] = useState('')
 
+  const [stockItems, setStockItems] = useState<any[]>([])
+  const [stockItemId, setStockItemId] = useState('')
+
   const selectedAnalyses = useMemo(() => {
     if (!selectedSampleId) return []
     return analyses.filter(a => a.sampleId === selectedSampleId)
@@ -60,14 +63,16 @@ export default function SamplesPage() {
   }, [samples, filterBatchId])
 
   const loadData = async () => {
-    const [samplesRes, clientsRes, analysesRes, batchesRes] = await Promise.all([
+    const [samplesRes, clientsRes, analysesRes, batchesRes,stockRes] = await Promise.all([
     api.get('/samples'),
     api.get('/clients'),
     api.get('/analyses'),
     api.get('/batches'),
+    api.get('/stock'),
     ])
 
     setBatches(batchesRes.data)
+    setStockItems(stockRes.data)
 
     setSamples(samplesRes.data)
     setClients(clientsRes.data)
@@ -98,16 +103,18 @@ export default function SamplesPage() {
   }
 
   const saveAnalysis = async () => {
-    if (!selectedSampleId || !parameter || !value || !threshold) return
+  if (!selectedSampleId || !parameter || !value || !threshold) return
 
-    const payload = {
-      parameter,
-      value: Number(value),
-      unit,
-      threshold: Number(threshold),
-      sampleId: selectedSampleId,
-    }
+  const payload = {
+    parameter,
+    value: Number(value),
+    unit,
+    threshold: Number(threshold),
+    sampleId: selectedSampleId,
+    stockItemId: stockItemId ? Number(stockItemId) : null,
+  }
 
+  try {
     if (editingAnalysisId) {
       await api.put(`/analyses/${editingAnalysisId}`, payload)
     } else {
@@ -119,9 +126,13 @@ export default function SamplesPage() {
     setValue('')
     setUnit('')
     setThreshold('')
+    setStockItemId('')
 
     await loadData()
+  } catch (error: any) {
+    alert(error.response?.data || 'Analysis save failed')
   }
+}
 
   const cancelEdit = () => {
     setEditingAnalysisId(null)
@@ -351,6 +362,18 @@ export default function SamplesPage() {
                       onChange={e => setParameter(e.target.value)}
                       className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
                     />
+                    <select
+                        value={stockItemId}
+                        onChange={e => setStockItemId(e.target.value)}
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#34348b]"
+                      >
+                        <option value="">No stock item</option>
+                        {stockItems.map(stock => (
+                          <option key={stock.id} value={stock.id}>
+                            {stock.name} / Lot {stock.lotNumber} / Qty {stock.quantity}
+                          </option>
+                        ))}
+                      </select>
 
                     <div className="grid grid-cols-3 gap-3">
                       <input
@@ -402,9 +425,16 @@ export default function SamplesPage() {
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <div>
                         <p className="font-black">{analysis.parameter}</p>
+
                         <p className="text-sm text-slate-400">
                           {analysis.value} {analysis.unit} / seuil {analysis.threshold}
                         </p>
+
+                        {analysis.stockItem && (
+                          <p className="text-xs text-slate-400">
+                            🧪 {analysis.stockItem.name} (Lot {analysis.stockItem.lotNumber})
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
@@ -427,6 +457,7 @@ export default function SamplesPage() {
                                 setValue(String(analysis.value))
                                 setUnit(analysis.unit)
                                 setThreshold(String(analysis.threshold))
+                                setStockItemId(analysis.stockItemId ? String(analysis.stockItemId) : '')
                               }}
                               className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-100"
                             >

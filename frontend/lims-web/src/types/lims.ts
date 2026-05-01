@@ -29,6 +29,14 @@ export type Analysis = {
   threshold: number
   isCompliant: boolean
   sampleId: number
+
+  stockItemId?: number | null
+
+  stockItem?: {
+    id: number
+    name: string
+    lotNumber: string
+  }
 }
 
 export type AuditLog = {
@@ -47,4 +55,5 @@ export type AuditLog = {
   comment?: string | null
   createdAt: string
 }
+
 

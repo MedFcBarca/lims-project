@@ -9,7 +9,8 @@ import {
   CheckCircle2,
   History,
   Boxes,
-  UserPlus
+  UserPlus,
+  Package
 } from 'lucide-react'
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -20,12 +21,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     { label: 'Samples', path: '/samples', icon: FlaskConical },
     { label: 'Audit Trail', path: '/audit-trail', icon: History },
     { label: 'Register', path: '/register', icon: UserPlus },
+    { label: 'Stock', path: '/stock', icon: Package },
   ]
 
-  // 🔐 USER CONNECTÉ
+  //  USER CONNECTÉ
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
-  // 🔥 LOGOUT
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')

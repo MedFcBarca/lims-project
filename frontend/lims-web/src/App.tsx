@@ -7,6 +7,7 @@ import AuditTrailPage from './pages/AuditTrailPage'
 import BatchesPage from './pages/BatchesPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import StockPage from './pages/StockPage'
 
 function App() {
   const token = localStorage.getItem('token')
@@ -25,6 +26,7 @@ function App() {
           <Route path="/audit-trail" element={<AuditTrailPage />} />
           <Route path="/batches" element={<BatchesPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/stock" element={<StockPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>
