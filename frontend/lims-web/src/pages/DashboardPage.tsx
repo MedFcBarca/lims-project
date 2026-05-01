@@ -18,6 +18,9 @@ import {
   Activity,
   Search,
   Building2,
+  Package,
+  ClipboardList,
+  Receipt,
 } from 'lucide-react'
 import { api } from '../api/api'
 import type { Analysis, Sample } from '../types/lims'
@@ -25,6 +28,9 @@ import type { Analysis, Sample } from '../types/lims'
 export default function DashboardPage() {
   const [samples, setSamples] = useState<Sample[]>([])
   const [analyses, setAnalyses] = useState<Analysis[]>([])
+  const [stockItems, setStockItems] = useState<any[]>([])
+  const [samplingRequests, setSamplingRequests] = useState<any[]>([])
+  const [invoices, setInvoices] = useState<any[]>([])
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -32,13 +38,20 @@ export default function DashboardPage() {
   }, [])
 
   const loadData = async () => {
-    const [samplesRes, analysesRes] = await Promise.all([
-      api.get('/samples'),
-      api.get('/analyses'),
-    ])
+    const [samplesRes, analysesRes, stockRes, requestsRes, invoicesRes] =
+      await Promise.all([
+        api.get('/samples'),
+        api.get('/analyses'),
+        api.get('/stock'),
+        api.get('/samplingrequests'),
+        api.get('/invoices'),
+      ])
 
     setSamples(samplesRes.data)
     setAnalyses(analysesRes.data)
+    setStockItems(stockRes.data)
+    setSamplingRequests(requestsRes.data)
+    setInvoices(invoicesRes.data)
   }
 
   const totalSamples = samples.length
@@ -53,12 +66,28 @@ export default function DashboardPage() {
   const complianceRate =
     analyses.length === 0 ? 0 : Math.round((compliantAnalyses / analyses.length) * 100)
 
+  const criticalStock = stockItems.filter(
+    item =>
+      item.quantity === 0 ||
+      item.quantity <= 2 ||
+      new Date(item.expirationDate) < new Date()
+  ).length
+
+  const plannedRequests = samplingRequests.filter(r => r.status === 'Planned').length
+  const collectedRequests = samplingRequests.filter(r => r.status === 'Collected').length
+
+  const invoicesCount = invoices.length
+  const totalRevenue = invoices.reduce(
+    (sum, invoice) => sum + Number(invoice.totalAmount),
+    0
+  )
+
   const statusChart = [
-  { name: 'InProgress', value: inProgress },
-  { name: 'Completed', value: completed },
-  { name: 'Validated', value: validated },
-  { name: 'Rejected', value: rejected },
-]
+    { name: 'InProgress', value: inProgress },
+    { name: 'Completed', value: completed },
+    { name: 'Validated', value: validated },
+    { name: 'Rejected', value: rejected },
+  ]
 
   const analysisChart = [
     { name: 'Conforme', value: compliantAnalyses },
@@ -105,11 +134,26 @@ export default function DashboardPage() {
         <KpiCard icon={<CheckCircle2 />} title="Validated" value={validated} color="bg-emerald-100" />
         <KpiCard icon={<XCircle />} title="Rejected" value={rejected} color="bg-rose-100" />
 
+        <KpiCard icon={<Package />} title="Critical stock" value={criticalStock} color="bg-amber-100" />
+        <KpiCard icon={<ClipboardList />} title="Planned requests" value={plannedRequests} color="bg-blue-100" />
+        <KpiCard icon={<CheckCircle2 />} title="Collected requests" value={collectedRequests} color="bg-emerald-100" />
+        <KpiCard icon={<Receipt />} title="Invoices" value={invoicesCount} color="bg-purple-100" />
+
         <div className="col-span-4 rounded-[28px] bg-gradient-to-br from-[#0b2545] to-[#1c4b73] p-10 text-white shadow-xl shadow-blue-100">
           <p className="text-xl font-semibold">Compliance rate</p>
           <p className="mt-6 text-7xl font-black">{complianceRate}%</p>
           <p className="mt-3 text-white/70">
             {compliantAnalyses} compliant / {analyses.length} analyses
+          </p>
+        </div>
+
+        <div className="col-span-4 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
+          <p className="text-xl font-semibold text-slate-400">Total billed</p>
+          <p className="mt-6 text-5xl font-black text-emerald-700">
+            {totalRevenue} €
+          </p>
+          <p className="mt-3 text-slate-400">
+            {invoicesCount} generated invoices
           </p>
         </div>
 
@@ -123,7 +167,7 @@ export default function DashboardPage() {
           <Chart data={analysisChart} colors={['#10b981', '#ef4444']} />
         </div>
 
-        <div className="col-span-7 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
+        <div className="col-span-8 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
           <h3 className="mb-6 text-2xl font-black">Weekly sample activity</h3>
 
           <div className="h-72">
@@ -152,7 +196,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="col-span-5 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
+        <div className="col-span-4 rounded-[28px] bg-white p-8 shadow-xl shadow-slate-100">
           <h3 className="mb-6 text-2xl font-black">Latest samples</h3>
 
           {filteredSamples.length === 0 ? (
@@ -235,12 +279,12 @@ function Chart({ data, colors }: { data: { name: string; value: number }[]; colo
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-  Received: 'bg-slate-100 text-slate-700',
-  InProgress: 'bg-blue-100 text-blue-700',
-  Completed: 'bg-purple-100 text-purple-700',
-  Validated: 'bg-emerald-100 text-emerald-700',
-  Rejected: 'bg-rose-100 text-rose-700',
-}
+    Received: 'bg-slate-100 text-slate-700',
+    InProgress: 'bg-blue-100 text-blue-700',
+    Completed: 'bg-purple-100 text-purple-700',
+    Validated: 'bg-emerald-100 text-emerald-700',
+    Rejected: 'bg-rose-100 text-rose-700',
+  }
 
   return (
     <span className={`rounded-full px-4 py-2 text-xs font-black ${styles[status] ?? 'bg-slate-100 text-slate-600'}`}>

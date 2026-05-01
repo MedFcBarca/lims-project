@@ -11,7 +11,8 @@ import {
   FileDown,
   Upload,
   Boxes,
-  ClipboardList
+  ClipboardList,
+  Cpu
 } from 'lucide-react'
 import { api } from '../api/api'
 import type { Analysis, Client, Sample } from '../types/lims'
@@ -190,6 +191,21 @@ export default function SamplesPage() {
       setIsUploading(false)
     }
   }
+
+  const importFromMachine = async () => {
+  if (!selectedSampleId) return
+
+  try {
+    await api.post('/analyses/import-machine', {
+      sampleId: selectedSampleId,
+      machineName: 'Analyzer-AUTO-01',
+    })
+
+    await loadData()
+  } catch (error: any) {
+    alert(error.response?.data || 'Machine import failed')
+  }
+}
 
   useEffect(() => {
     loadData()
@@ -485,6 +501,27 @@ export default function SamplesPage() {
                   </div>
                 ))}
               </div>
+
+              {canWorkOnSamples && (
+                <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
+                  <h4 className="mb-4 flex items-center gap-2 font-black">
+                    <Cpu size={18} />
+                    Import from machine
+                  </h4>
+
+                  <p className="mb-4 text-sm text-slate-400">
+                    Simulate an automatic import from a laboratory analyzer.
+                  </p>
+
+                  <button
+                    onClick={importFromMachine}
+                    className="flex items-center gap-2 rounded-2xl bg-[#34348b] px-5 py-3 font-bold text-white hover:bg-[#292976]"
+                  >
+                    <Cpu size={16} />
+                    Import machine results
+                  </button>
+                </div>
+              )}
 
               <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
                 <h4 className="mb-4 flex items-center gap-2 font-black">

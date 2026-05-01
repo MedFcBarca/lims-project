@@ -77,4 +77,19 @@ public class AnalysesController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [Authorize(Roles = "Admin,Technician")]
+    [HttpPost("import-machine")]
+    public async Task<IActionResult> ImportFromMachine(MachineImportDto dto)
+    {
+        try
+        {
+            var result = await _analysisService.ImportFromMachineAsync(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
